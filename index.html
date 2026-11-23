@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Busy Bees — Hive Rush (Blooket-style)</title>
+<meta name="theme-color" content="#f7b500">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🐝</text></svg>">
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+:root{--gold:#f7b500;--gold-d:#c78d00;--ink:#3a2b00;--card:#fff;--red:#e21b3c;--blue:#1368ce;--yellow:#d89e00;--green:#26890c;}
+body{font-family:'Nunito',system-ui,sans-serif;background:#f7b500;color:var(--ink);min-height:100vh;display:flex;flex-direction:column;align-items:center;
+background-image:radial-gradient(#00000010 18%,transparent 19%),radial-gradient(#00000010 18%,transparent 19%);
+background-size:56px 56px;background-position:0 0,28px 28px;}
+/* ---- Blooket top HUD ---- */
+#topbar{width:min(1020px,96vw);margin:10px auto 0;background:#fff;border-radius:14px;box-shadow:0 4px 0 #0002;display:flex;align-items:center;gap:10px;padding:8px 12px;font-weight:900}
+#topbar .pill{background:#fff7dd;border:2px solid #f0d060;border-radius:10px;padding:4px 12px;font-size:15px;white-space:nowrap}
+#topbar .grow{flex:1;height:14px;background:#eee;border-radius:99px;overflow:hidden;box-shadow:inset 0 2px 0 #0001}
+#topbar .grow i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#57d657,#26890c);border-radius:99px;transition:width 1s linear}
+#iconBtns{display:flex;gap:6px}
+.iconBtn{background:#f4f4f4;border:none;border-radius:10px;font-size:18px;padding:6px 10px;cursor:pointer;box-shadow:0 3px 0 #0002}
+.iconBtn:active{transform:translateY(2px);box-shadow:none}
+/* ---- main layout ---- */
+#stage{width:min(1020px,96vw);display:grid;grid-template-columns:1fr 250px;gap:10px;margin:10px auto 30px}
+@media(max-width:760px){#stage{grid-template-columns:1fr}}
+#qcard{background:#fff;border-radius:16px;box-shadow:0 5px 0 #0002;padding:22px 18px;text-align:center;min-height:340px;display:flex;flex-direction:column;justify-content:center}
+#qcard h2{font-size:clamp(24px,4vw,38px);font-weight:900;line-height:1.15}
+#qcard .qsub{color:#888;font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:10px}
+#answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
+@media(max-width:520px){#answers{grid-template-columns:1fr}}
+.ans{border:none;border-radius:12px;padding:16px 12px;font-size:19px;font-weight:900;color:#fff;cursor:pointer;box-shadow:0 5px 0 #0003;display:flex;align-items:center;gap:10px;justify-content:flex-start;font-family:inherit}
+.ans:active{transform:translateY(3px);box-shadow:0 1px 0 #0003}
+.ans .shape{background:#fff3;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.ans.r{background:var(--red)}.ans.b{background:var(--blue)}.ans.y{background:var(--yellow)}.ans.g{background:var(--green)}
+.ans.correct{outline:5px solid #2ecc71;filter:brightness(1.1)}
+.ans.wrong{outline:5px solid #111;filter:grayscale(.7) brightness(.75);animation:shake .35s}
+@keyframes shake{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+#feed{height:26px;font-weight:900;margin-top:10px;font-size:16px}
+/* ---- side hive panel ---- */
+#side{display:flex;flex-direction:column;gap:10px}
+.panel{background:#fff;border-radius:16px;box-shadow:0 5px 0 #0002;padding:12px}
+.panel h3{font-size:13px;letter-spacing:1.5px;color:#999;margin-bottom:8px}
+#myhoney{font-size:34px;font-weight:900}
+#mystats{font-size:13px;font-weight:800;color:#777}
+#hiveBox{background:#fff8df;border:2px dashed #e3b800;border-radius:12px;min-height:150px;position:relative;overflow:hidden;padding:6px}
+.bee{position:absolute;font-size:20px;animation:hover 2.6s ease-in-out infinite}
+@keyframes hover{50%{transform:translateY(-8px) rotate(8deg)}}
+.lrow{display:flex;align-items:center;gap:8px;background:#f7f7f7;border-radius:10px;padding:7px 9px;margin:6px 0;font-weight:900;font-size:14px}
+.lrow.me{background:#fff3c4;outline:2px solid var(--gold)}
+.lrow .sc{margin-left:auto}
+/* ---- overlays: lobby, bee pick, board, podium ---- */
+#overlay{position:fixed;inset:0;background:#e89c00f2;z-index:30;overflow-y:auto;padding:18px 12px 60px;
+background-image:radial-gradient(#00000012 18%,transparent 19%),radial-gradient(#00000012 18%,transparent 19%);background-size:56px 56px;background-position:0 0,28px 28px;}
+.sheet{max-width:720px;margin:0 auto}
+.logo{text-align:center;color:#fff;font-size:clamp(38px,7vw,64px);font-weight:900;letter-spacing:1px;text-shadow:0 4px 0 #0003}
+.logo small{display:block;font-size:14px;letter-spacing:6px;text-shadow:0 2px 0 #0003}
+.card{background:#fff;border-radius:16px;box-shadow:0 5px 0 #0002;padding:16px;margin:12px 0}
+.card h3{font-size:14px;letter-spacing:1px;color:#555;margin-bottom:8px}
+.optrow{display:flex;gap:8px;flex-wrap:wrap}
+.opt{flex:1;min-width:110px;background:#f2f2f2;border:3px solid transparent;border-radius:12px;padding:10px;cursor:pointer;text-align:center;font-weight:900}
+.opt.sel{border-color:var(--gold);background:#fff8dd}
+.opt small{display:block;color:#888;font-size:11px}
+.playbtn{display:block;width:100%;background:var(--green);color:#fff;border:none;border-radius:14px;font-size:22px;font-weight:900;padding:15px;cursor:pointer;box-shadow:0 6px 0 #1a5e08;font-family:inherit;margin-top:6px}
+.playbtn:active{transform:translateY(4px);box-shadow:none}
+.ghostbtn{background:#fff;color:var(--ink);border:none;border-radius:12px;font-weight:900;padding:10px 16px;cursor:pointer;box-shadow:0 4px 0 #0002}
+input[type=number],input[type=text]{font-family:inherit;font-weight:900;border:3px solid #e5e5e5;border-radius:10px;padding:9px 12px;font-size:15px;width:130px}
+input:focus{outline:none;border-color:var(--gold)}
+/* bee modal — very Blooket */
+#modal{position:fixed;inset:0;background:#000a;z-index:50;display:none;align-items:center;justify-content:center;padding:14px}
+#mbox{background:#fff;border-radius:20px;max-width:620px;width:100%;padding:22px;text-align:center;box-shadow:0 8px 0 #0003;max-height:92vh;overflow-y:auto}
+#mbox h2{font-size:26px}
+.beeCards{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}
+@media(max-width:520px){.beeCards{grid-template-columns:1fr}}
+.beeCard{background:#f8f8f8;border:4px solid #eee;border-radius:16px;padding:16px 10px;cursor:pointer}
+.beeCard:hover{border-color:var(--gold);background:#fff8dd;transform:translateY(-2px)}
+.beeCard .em{font-size:58px}
+.beeCard b{font-size:17px;display:block;margin:6px 0 2px}
+.beeCard small{color:#666;font-weight:800;font-size:13px;line-height:1.4;display:block}
+.beeCard .cat{display:inline-block;font-size:10px;letter-spacing:2px;background:#333;color:#fff;border-radius:20px;padding:2px 10px;margin-top:6px}
+#toast{position:fixed;top:70px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:30px;font-weight:900;z-index:80;display:none;box-shadow:0 4px 0 #0004;max-width:92vw;text-align:center}
+#fxlayer{position:fixed;inset:0;pointer-events:none;z-index:70;overflow:hidden}
+.fxdrop{position:absolute;top:-60px;font-size:34px;animation:fall linear forwards}
+@keyframes fall{to{transform:translateY(110vh) rotate(360deg)}}
+#veil{position:fixed;inset:0;z-index:65;display:none;align-items:center;justify-content:center;font-size:60px;text-align:center}
+#veil.frost{background:#bde9ffdd}#veil.night{background:#000e}
+table.pod{width:100%;border-collapse:collapse;font-weight:900}
+table.pod td{padding:10px;border-bottom:2px solid #eee}
+.hidden{display:none!important}
+.dim{color:#777;font-weight:700;font-size:13px;line-height:1.6}
+</style>
+</head>
+<body>
+<div id="topbar">
+<span class="pill">🍯 <span id="honeyHud">0</span></span>
+<span class="pill">⚡ +<span id="rateHud">5</span>/Q</span>
+<div class="grow"><i id="timebar"></i></div>
+<span class="pill">⏱ <span id="timeHud">3:00</span></span>
+<div id="iconBtns"><button class="iconBtn" id="btnBoard" title="Leaderboard">🏆</button><button class="iconBtn" id="btnSound" title="Sound">🔊</button><button class="iconBtn" id="btnHome" title="Home">🏠</button></div>
+</div>
+
+<div id="stage">
+<div id="qcard">
+<div class="qsub" id="qnum">QUESTION 1 · TAP THE CORRECT ANSWER</div>
+<h2 id="qtext">…</h2>
+<div id="answers"></div>
+<div id="feed"></div>
+</div>
+<div id="side">
+<div class="panel"><h3>🍯 MY HONEY</h3><div id="myhoney">0</div><div id="mystats">+5 / question · ×1</div></div>
+<div class="panel"><h3>🐝 MY HIVE</h3><div id="hiveBox"></div></div>
+<div class="panel"><h3>🏆 STANDINGS</h3><div id="miniBoard"></div></div>
+</div>
+</div>
+
+<div id="veil"></div><div id="fxlayer"></div><div id="toast"></div>
+
+<div id="overlay"><div class="sheet">
+<div class="logo">🐝 BUSY BEES<small>HIRE BEES · MAKE SWEET HONEY</small></div>
+<div class="card"><h3>😀 YOUR NAME</h3>
+<div style="text-align:center"><input type="text" id="nameIn" value="You" maxlength="12" style="width:200px;text-align:center"></div>
+</div>
+<div class="card"><h3>🎮 MODE</h3><div class="optrow" id="modeRow">
+<div class="opt sel" data-mode="solo"><b>Solo vs 3 Bots</b><small>classic practice</small></div>
+<div class="opt" data-mode="2p"><b>2P + 2 bots</b><small>pass &amp; play · keys 1-4</small></div>
+<div class="opt" data-mode="3p"><b>3P + 1 bot</b><small>party</small></div>
+<div class="opt" data-mode="4p"><b>4P party</b><small>no bots</small></div>
+</div></div>
+<div class="card"><h3>⏱ GAME LENGTH</h3><div class="optrow" id="timeRow">
+<div class="opt" data-t="60"><b>1:00</b><small>blitz</small></div>
+<div class="opt sel" data-t="180"><b>3:00</b><small>classic</small></div>
+<div class="opt" data-t="300"><b>5:00</b><small>long</small></div>
+<div class="opt" data-t="420"><b>7:00</b><small>marathon</small></div>
+</div><div class="dim" style="margin-top:8px">✏️ Or type: <input type="number" id="customTime" min="0.5" max="60" step="0.5" placeholder="minutes"> min &nbsp; 🎯 goal: <input type="number" id="customGoal" min="100" max="100000" step="100" placeholder="2000"> 🍯</div></div>
+<button class="playbtn" id="btnStart">▶ &nbsp;PLAY</button>
+<div class="card"><h3>🐝 HOW IT WORKS (like Blooket)</h3><div class="dim">Answer the math question (demo questions — real sets plug in later). Correct = honey + <b>pick 1 of 2 bees</b>. Wrong = brief lockout, no bee.<br>📈 Income bees stack +🍯/Q · 💰 instant bees pay now · ✖️ multipliers boost future Qs · 🦹 steal bees rob rivals · ❄️ distract bees rain chaos on everyone else.<br>Most 🍯 when time runs out (or someone hits goal) wins.</div></div>
+</div></div>
+
+<div id="modal"><div id="mbox">
+<h2 id="mTitle">Pick a bee! 🐝</h2>
+<p class="dim" id="mSub"></p>
+<div class="beeCards" id="mCards"></div>
+</div></div>
+
+<script>
+"use strict";
+const $=id=>document.getElementById(id);
+let soundOn=true,players=[],gameOn=false,timeLeft=180,timeTotal=180,goal=2000,timerId=null,mode='solo';
+let me=0,qNo=0,locked=false,audioCtx=null;
+function buzz(f=520,d=0.07,type='square'){if(!soundOn)return;try{audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.type=type;o.frequency.value=f;g.gain.value=0.05;o.connect(g);g.connect(audioCtx.destination);o.start();g.gain.exponentialRampToValueAtTime(.0001,audioCtx.currentTime+d);o.stop(audioCtx.currentTime+d);}catch(e){}}
+function toast(t,ms=2200){const e=$('toast');e.textContent=t;e.style.display='block';clearTimeout(e._t);e._t=setTimeout(()=>e.style.display='none',ms);}
+function fmt(t){t=Math.max(0,Math.ceil(t));return Math.floor(t/60)+':'+String(t%60).padStart(2,'0');}
+
+const BEES=[
+{id:'busy',em:'🐝',name:'Busy Bee',cat:'INCOME',desc:'+1 honey every question, forever',w:14,run:p=>{p.per+=1;}},
+{id:'beehive',em:'🍯',name:'Beehive Bee',cat:'INCOME',desc:'+5 honey every question, forever',w:11,run:p=>{p.per+=5;}},
+{id:'business',em:'💼',name:'Business Bee',cat:'INCOME',desc:'+10 honey every question, forever',w:8,run:p=>{p.per+=10;}},
+{id:'monocle',em:'🧐',name:'Monocle Bee',cat:'INCOME',desc:'+15 honey every question, forever',w:5,run:p=>{p.per+=15;}},
+{id:'magic',em:'🔮',name:'Magic Bee',cat:'INCOME',desc:'+20 honey every question, forever',w:3,run:p=>{p.per+=20;}},
+{id:'worker',em:'👷',name:'Worker Bee',cat:'INSTANT',desc:'+25 honey right now',w:12,run:p=>{p.honey+=25;}},
+{id:'garden',em:'🌸',name:'Garden Bee',cat:'INSTANT',desc:'+60 honey right now',w:9,run:p=>{p.honey+=60;}},
+{id:'cool',em:'😎',name:'Cool Bee',cat:'INSTANT',desc:'+120 honey right now',w:6,run:p=>{p.honey+=120;}},
+{id:'chef',em:'👨‍🍳',name:'Chef Bee',cat:'INSTANT',desc:'DOUBLE your honey total!',w:4,run:p=>{p.honey*=2;}},
+{id:'ghost',em:'👻',name:'Ghost Bee',cat:'INSTANT',desc:'TRIPLE your honey total!',w:2,run:p=>{p.honey*=3;}},
+{id:'unicorn',em:'🦄',name:'Unicorn Bee',cat:'BOOST',desc:'×2 honey on every future question',w:4,run:p=>{p.mult*=2;}},
+{id:'king',em:'🤴',name:'King Bee',cat:'BOOST',desc:'×3 honey on every future question',w:2,run:p=>{p.mult*=3;}},
+{id:'pirate',em:'🏴‍☠️',name:'Pirate Bee',cat:'STEAL',desc:'Steal 10% from one rival',w:6,need:true,run:(p,t)=>{const s=Math.floor(t.honey*.10);t.honey-=s;p.honey+=s;p._s=s;}},
+{id:'vampire',em:'🧛',name:'Vampire Bee',cat:'STEAL',desc:'Steal 25% from one rival',w:3,need:true,run:(p,t)=>{const s=Math.floor(t.honey*.25);t.honey-=s;p.honey+=s;p._s=s;}},
+{id:'queen',em:'👑',name:'Queen Bee',cat:'STEAL',desc:'SWAP honey totals with a rival!',w:2,need:true,run:(p,t)=>{const a=p.honey;p.honey=t.honey;t.honey=a;}},
+{id:'blizzard',em:'❄️',name:'Blizzard Bee',cat:'ATTACK',desc:'Freeze rivals 4s — no answering!',w:5,run:p=>{attack(p,'frost',4000,'❄️');}},
+{id:'night',em:'🌙',name:'Night Bee',cat:'ATTACK',desc:'Darkness falls on rivals 6s',w:5,run:p=>{attack(p,'night',6000,'🌙');}},
+{id:'baby',em:'🍼',name:'Baby Bee',cat:'ATTACK',desc:'Emoji storm buries rival screens',w:4,run:p=>{attack(p,'storm',5000,'🍼');}},
+];
+function pickTwo(){const bag=[];BEES.forEach(b=>{for(let i=0;i<b.w;i++)bag.push(b);});let a=bag[Math.random()*bag.length|0],b=a,g=0;while(b===a&&g++<60)b=bag[Math.random()*bag.length|0];return[a,b];}
+function botScore(b,p){const lead=Math.max(...players.map(q=>q.honey));if(b.need)return lead>p.honey*1.3?30:(p.honey>200?8:2);if(b.id==='ghost')return p.honey>300?28:3;if(b.id==='chef')return p.honey>200?24:3;if(b.id==='king'||b.id==='unicorn')return p.per>12?22:6;if(b.cat==='INCOME')return 13+ (timeLeft>90?6:0)-b.w*.2;if(b.cat==='ATTACK')return lead>p.honey?15:7;return 8;}
+
+/* lobby wiring */
+const AVATARS=['🐝','🐞','🦋','🐛','🐌','🦗'];
+function selRow(id,cb){$(id).addEventListener('click',e=>{const o=e.target.closest('.opt');if(!o)return;[...$(id).children].forEach(x=>x.classList.remove('sel'));o.classList.add('sel');cb(o);});}
+selRow('modeRow',o=>mode=o.dataset.mode);
+selRow('timeRow',o=>{timeLeft=timeTotal=+o.dataset.t;$('customTime').value='';});
+$('btnSound').onclick=e=>{soundOn=!soundOn;e.target.textContent=soundOn?'🔊':'🔇';};
+$('btnHome').onclick=()=>{gameOn=false;clearInterval(timerId);$('overlay').style.display='block';};
+$('btnBoard').onclick=showBoard;
+$('btnStart').onclick=startGame;
+
+/* demo question generator (infinite, no bank needed) */
+function genQ(){
+  const ops=['+','−','×'];const op=ops[Math.random()*ops.length|0];
+  let a,b,ans;
+  if(op==='+'){a=2+Math.random()*20|0;b=2+Math.random()*20|0;ans=a+b;}
+  else if(op==='−'){a=10+Math.random()*25|0;b=2+Math.random()*a|0;ans=a-b;}
+  else{a=2+Math.random()*9|0;b=2+Math.random()*9|0;ans=a*b;}
+  const set=new Set([ans]);while(set.size<4){set.add(ans+[-10,-3,-2,-1,1,2,3,10][Math.random()*8|0]+(Math.random()*4|0));[...set].filter(x=>x<0).forEach(x=>set.delete(x));}
+  const arr=[...set].slice(0,4).sort(()=>Math.random()-.5);
+  return {t:`What is ${a} ${op} ${b}?`,ans,opts:arr};
+}
+let cur=null;
+function nextQ(){
+  if(!gameOn)return;
+  locked=false;qNo++;cur=genQ();
+  $('qnum').textContent=`QUESTION ${qNo} · TAP THE CORRECT ANSWER`;
+  $('qtext').textContent=cur.t;$('feed').textContent='';
+  const shapes=['▲','◆','●','■'],cls=['r','b','y','g'];
+  $('answers').innerHTML=cur.opts.map((v,i)=>`<button class="ans ${cls[i]}" data-v="${v}"><span class="shape">${shapes[i]}</span>${v}</button>`).join('');
+  [...$('answers').children].forEach(b=>b.onclick=()=>answer(b));
+}
+function answer(btn){
+  if(!gameOn||locked)return;
+  const p=players[me];
+  const v=+btn.dataset.v;
+  if(v===cur.ans){
+    locked=true;btn.classList.add('correct');
+    const gain=p.per*p.mult;p.honey+=gain;
+    $('feed').textContent=`✅ +${gain} 🍯! Pick a bee!`;buzz(880,.09);
+    popHoney('+'+gain);
+    setTimeout(()=>offerBees(p),450);
+  }else{
+    btn.classList.add('wrong');$('feed').textContent='❌ Not quite — 1s penalty!';buzz(180,.15,'sawtooth');
+    locked=true;setTimeout(()=>{if(gameOn)nextQ();},900);
+  }
+  syncHud();
+}
+function popHoney(t){const d=document.createElement('div');d.textContent=t+' 🍯';d.style.cssText='position:fixed;left:50%;top:120px;transform:translateX(-50%);font-size:34px;font-weight:900;color:#fff;text-shadow:0 3px 0 #0005;z-index:75;transition:all .9s';document.body.appendChild(d);requestAnimationFrame(()=>{d.style.top='40px';d.style.opacity='0';});setTimeout(()=>d.remove(),950);}
+
+/* bee choice (Blooket modal) */
+function offerBees(p){
+  if(!gameOn)return;
+  const[a,b]=pickTwo();
+  $('mTitle').textContent=(p!==players[me]?p.name+': auto-pick':'Pick a bee! 🐝');
+  $('mSub').textContent=`Correct! ${Math.floor(p.honey)}🍯 total · +${p.per} ×${p.mult} per question`;
+  const c=$('mCards');c.innerHTML='';
+  [a,b].forEach(bee=>{
+    const d=document.createElement('div');d.className='beeCard';
+    d.innerHTML=`<div class="em">${bee.em}</div><b>${bee.name}</b><small>${bee.desc}</small><br><span class="cat">${bee.cat}</span>`;
+    d.onclick=()=>resolveBee(p,bee);
+    c.appendChild(d);
+  });
+  if(p!==players[me]){ // shouldn't happen; bots auto
+    resolveBee(p,Math.random()<.5?a:b);return;
+  }
+  $('modal').style.display='flex';
+}
+function resolveBee(p,bee){
+  if(bee.need){
+    const foes=players.filter(q=>q!==p&&q.honey>0).sort((x,y)=>y.honey-x.honey);
+    if(!foes.length){p.honey+=20;$('modal').style.display='none';afterPick(p,bee,'No one to rob — +20 consolation');return;}
+    if(p!==players[me]){bee.run(p,foes[0]);afterPick(p,bee);return;}
+    $('mTitle').textContent=`${bee.em} ${bee.name} — pick a target!`;
+    $('mSub').textContent=bee.desc;
+    const c=$('mCards');c.innerHTML='';
+    foes.forEach(f=>{
+      const d=document.createElement('div');d.className='beeCard';
+      d.innerHTML=`<div class="em">${f.avatar}</div><b>${f.name}</b><small>🍯 ${Math.floor(f.honey)}</small>`;
+      d.onclick=()=>{bee.run(p,f);toast(`${bee.em} ${p.name} hit ${f.name}!`);afterPick(p,bee,bee.id==='queen'?'Swapped totals!':`Stole ${p._s}🍯!`);};
+      c.appendChild(d);
+    });
+    return;
+  }
+  bee.run(p);afterPick(p,bee);
+}
+function afterPick(p,bee,note){
+  p.bees.push(bee);
+  if(p===players[me]){$('modal').style.display='none';$('feed').textContent=`${bee.em} ${bee.name}! ${note||bee.desc}`;nextQ();}
+  syncHud();
+  if(players.some(q=>q.honey>=goal))finish();
+}
+function attack(from,kind,ms,em){
+  rain(em,40);
+  if(from===players[me]||players[me]!==from){
+    if(kind!=='storm'){const v=$('veil');v.className='';v.id='veil';v.style.display='flex';v.className=kind;
+      v.innerHTML=kind==='frost'?'❄️<div style="font-size:18px;font-weight:900;color:#034">FROZEN! Wait…</div>':'🌙<div style="font-size:18px;font-weight:900;color:#fff">SO DARK…</div>';
+      locked=true;setTimeout(()=>{v.style.display='none';v.className='';if(gameOn&&!$('modal').offsetParent||$('modal').style.display!=='flex')locked=false;},ms);
+    } else { locked=true;setTimeout(()=>{locked=false;},2500); }
+  }
+  toast(`${from.name} used ${em} on rivals!`);
+  buzz(200,.25,'sawtooth');
+}
+function rain(em,n){const L=$('fxlayer');for(let i=0;i<n;i++){const s=document.createElement('div');s.className='fxdrop';s.textContent=em;s.style.left=Math.random()*100+'vw';s.style.animationDuration=(1.5+Math.random()*2)+'s';s.style.fontSize=(20+Math.random()*30)+'px';L.appendChild(s);setTimeout(()=>s.remove(),3800);}}
+function showBoard(){
+  const sorted=[...players].sort((a,b)=>b.honey-a.honey);
+  $('mTitle').textContent='🏆 Leaderboard';
+  $('mSub').textContent=`Goal ${goal>90000?'∞ time only':goal+'🍯'} · ${fmt(timeLeft)} left`;
+  $('mCards').innerHTML=sorted.map((p,i)=>`<div class="beeCard" style="cursor:default"><div class="em">${p.avatar}</div><b>${i===0?'👑 ':''}${p.name}</b><small>🍯 ${Math.floor(p.honey)} · 🐝${p.bees.length} · +${p.per}×${p.mult}</small></div>`).join('');
+  $('modal').style.display='flex';
+  $('mCards').onclick=()=>{if(gameOn)$('modal').style.display='none';};setTimeout(()=>$('mCards').onclick=null,10);
+}
+
+/* game flow */
+function newP(name,avatar,bot){return{name,avatar,isBot:bot,honey:0,per:5,mult:1,bees:[]};}
+function startGame(){
+  const ct=parseFloat($('customTime').value);timeLeft=timeTotal=(ct>0&&ct<=60)?Math.round(ct*60):timeLeft;
+  const cg=parseInt($('customGoal').value||$('customGoal').placeholder);
+  goal=(+$('customGoal').value>=50)?+$('customGoal').value:goal;
+  const counts={solo:{h:1,b:3},'2p':{h:2,b:2},'3p':{h:3,b:1},'4p':{h:4,b:0}}[mode];
+  players=[];
+  const myName=($('nameIn').value||'You').slice(0,12);
+  for(let i=0;i<counts.h;i++)players.push(newP(i===0?myName:'Player '+(i+1),AVATARS[i%AVATARS.length],false));
+  const botNames=['Pixel','Honey','Buzz','Comb'];
+  for(let i=0;i<counts.b;i++)players.push(newP('🤖 '+botNames[i%botNames.length]+' Bot',AVATARS[(players.length)%AVATARS.length],true));
+  me=0;gameOn=true;qNo=0;
+  $('overlay').style.display='none';$('modal').style.display='none';
+  clearInterval(timerId);timerId=setInterval(tick,1000);
+  nextQ();syncHud();
+  players.forEach(p=>{if(p.isBot)scheduleBot(p);});
+  toast('Answer correctly to hire bees! 🐝');
+}
+function tick(){
+  if(!gameOn)return;
+  timeLeft--;$('timeHud').textContent=fmt(timeLeft);
+  $('timebar').style.width=Math.max(0,timeLeft/timeTotal*100)+'%';
+  if(timeLeft<=0||players.some(p=>p.honey>=goal))return finish();
+  syncHud();
+}
+function syncHud(){
+  const p=players[me];if(!p)return;
+  $('honeyHud').textContent=Math.floor(p.honey);
+  $('rateHud').textContent=(p.per*p.mult);
+  $('myhoney').textContent='🍯 '+Math.floor(p.honey);
+  $('mystats').textContent=`+${p.per} ×${p.mult} = +${p.per*p.mult}/Q · 🐝${p.bees.length}`;
+  $('timeHud').textContent=fmt(timeLeft);
+  $('timebar').style.width=Math.max(0,timeLeft/timeTotal*100)+'%';
+  const hb=$('hiveBox');hb.innerHTML='🍯';
+  hb.style.fontSize='64px';hb.style.textAlign='center';hb.style.lineHeight='1';
+  p.bees.slice(-16).forEach(()=>{});
+  const wrap=document.createElement('div');
+  p.bees.slice(-16).forEach(b=>{const s=document.createElement('span');s.className='bee';s.textContent=b.em;s.style.left=(5+Math.random()*85)+'%';s.style.top=(10+Math.random()*70)+'%';s.style.animationDelay=(Math.random()*2)+'s';hb.appendChild(s);});
+  const sorted=[...players].sort((a,b)=>b.honey-a.honey);
+  $('miniBoard').innerHTML=sorted.map((q,i)=>`<div class="lrow${q===p?' me':''}"><span>${i===0?'👑':''}${q.avatar} ${q.name}</span><span class="sc">🍯${Math.floor(q.honey)}</span></div>`).join('');
+}
+/* bots: answer on a loop */
+function scheduleBot(p){
+  setTimeout(()=>{
+    if(!gameOn)return;
+    const gain=p.per*p.mult;p.honey+=gain;
+    const[a,b]=pickTwo();const pick=botScore(a,p)>=botScore(b,p)?a:b;
+    if(pick.need){const foes=players.filter(q=>q!==p&&q.honey>0).sort((x,y)=>y.honey-x.honey);if(foes[0]){pick.run(p,foes[0]);if(Math.random()<.4)toast(`${p.name} hit ${foes[0].name} with ${pick.name}!`);}else p.honey+=20;}
+    else pick.run(p);
+    p.bees.push(pick);syncHud();
+    if(players.some(q=>q.honey>=goal)){finish();return;}
+    scheduleBot(p);
+  },1400+Math.random()*1800);
+}
+/* local multiplayer extra humans: keys 1-4 simulate their correct answers */
+document.addEventListener('keydown',e=>{
+  if(!gameOn)return;const n=+e.key;if(!n||n<1||n>players.length)return;
+  const p=players[n-1];if(p.isBot||n===1)return; // P1 uses mouse on question card
+  const gain=p.per*p.mult;p.honey+=gain;
+  const[a,b]=pickTwo();const pick=botScore(a,p)>=botScore(b,p)?a:b;
+  if(pick.need){const foes=players.filter(q=>q!==p&&q.honey>0).sort((x,y)=>y.honey-x.honey);if(foes[0])pick.run(p,foes[0]);}
+  else pick.run(p);p.bees.push(pick);
+  toast(`${p.name} +${gain}🍯 (${pick.em} ${pick.name})`);syncHud();
+});
+function finish(){
+  if(!gameOn)return;gameOn=false;clearInterval(timerId);
+  $('modal').style.display='none';
+  const sorted=[...players].sort((a,b)=>b.honey-a.honey);const w=sorted[0];
+  rain('🍯',60);rain('🎉',40);buzz(660,.12);setTimeout(()=>buzz(880,.15),150);setTimeout(()=>buzz(1170,.25),320);
+  $('mTitle').textContent=`🏆 ${w.avatar} ${w.name} wins!`;
+  $('mSub').textContent=`${Math.floor(w.honey)}🍯 · tap anywhere to see results`;
+  $('mCards').innerHTML=sorted.map((p,i)=>`<div class="beeCard" style="cursor:default"><div class="em">${['🥇','🥈','🥉','4️⃣','5️⃣','6️⃣'][i]||'🐝'} ${p.avatar}</div><b>${p.name}</b><small>🍯${Math.floor(p.honey)} · 🐝${p.bees.length} · +${p.per}×${p.mult}</small></div>`).join('');
+  $('modal').style.display='flex';
+  $('modal').onclick=()=>{$('modal').style.display='none';$('modal').onclick=null;$('overlay').style.display='block';
+    document.querySelector('.sheet').innerHTML=`<div class="logo">🏆 RESULTS</div><div class="card"><table class="pod">${sorted.map((p,i)=>`<tr><td>${i+1}. ${p.avatar} ${p.name}</td><td>🍯${Math.floor(p.honey)}</td><td>🐝${p.bees.length}</td></tr>`).join('')}</table><button class="playbtn" onclick="location.reload()">🔁 PLAY AGAIN</button><p class="dim" style="margin-top:8px">Next: plug in a real question set to replace the demo math.</p></div>`;};
+}
+</script>
+</body>
+</html>
