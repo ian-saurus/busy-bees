@@ -39,8 +39,6 @@ background:radial-gradient(220px 90px at 8% 100%,#7bc96f 60%,transparent 61%),ra
 #qcard .qsub{color:#888;font-weight:800;font-size:13px;letter-spacing:1px;margin-bottom:10px}
 #qcard h2{font-size:clamp(24px,4vw,38px);font-weight:900;line-height:1.15}
 #qsrc{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:#999;border-radius:20px;padding:2px 12px;margin-bottom:8px;letter-spacing:1px}
-#answers{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:18px}
-@media(max-width:520px){#answers{grid-template-columns:1fr}}
 .ans{border:none;border-radius:12px;padding:16px 12px;font-size:19px;font-weight:900;color:#fff;cursor:pointer;box-shadow:0 5px 0 #0003;display:flex;align-items:center;gap:10px;justify-content:flex-start;font-family:inherit}
 .ans:active{transform:translateY(3px);box-shadow:0 1px 0 #0003}
 .ans .shape{background:#fff3;width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
@@ -137,10 +135,10 @@ summary{cursor:pointer;font-weight:900;color:#555;font-size:13px}
 
 <div id="stage">
 <div id="qcard">
-<div><span id="qsrc">MATH</span></div>
-<div class="qsub" id="qnum">QUESTION 1 · TAP THE CORRECT ANSWER</div>
-<h2 id="qtext">…</h2>
-<div id="answers"></div>
+<div><span id="qsrc">🍯 HIVE</span></div>
+<div class="qsub" id="qnum">TAP FORAGE TO GATHER HONEY</div>
+<h2 id="qtext">⛏</h2>
+<button class="playbtn" id="btnForage">⛏ FORAGE</button>
 <div id="feed"></div>
 <div id="pauseVeil">⏸ PAUSED<div class="dim">tap to resume</div></div>
 </div>
@@ -158,15 +156,12 @@ summary{cursor:pointer;font-weight:900;color:#555;font-size:13px}
 <div class="card"><h3>😀 YOUR NAME <span class="dim" id="bestLine"></span></h3>
 <div style="text-align:center"><input type="text" id="nameIn" value="You" maxlength="12" style="width:200px;text-align:center"></div>
 </div>
-<div class="card"><h3>📚 QUESTION SET</h3>
-<div class="dim">Sets will live on <b>XtremeGaming</b> — nothing baked in here. For now, warm-up with infinite Quick Math.</div>
-</div>
 <div class="card"><h3>🎮 MODE</h3><div class="optrow" id="modeRow">
 <div class="opt sel" data-mode="solo"><b>Solo vs 3 Bots</b><small>classic practice</small></div>
 <div class="opt" data-mode="2p"><b>2P + 2 bots</b><small>pass &amp; play · keys 1-4</small></div>
 <div class="opt" data-mode="3p"><b>3P + 1 bot</b><small>party</small></div>
 <div class="opt" data-mode="4p"><b>4P party</b><small>no bots</small></div>
-</div><div class="dim" style="margin-top:6px">Party: P1 answers on screen, P2+ tap their number key to forage.</div></div>
+</div><div class="dim" style="margin-top:6px">Party: P1 taps FORAGE on screen, P2+ tap their number key.</div></div>
 <div class="card"><h3>⏱ GAME LENGTH</h3><div class="optrow" id="timeRow">
 <div class="opt" data-t="60"><b>1:00</b><small>blitz</small></div>
 <div class="opt sel" data-t="180"><b>3:00</b><small>classic</small></div>
@@ -174,7 +169,7 @@ summary{cursor:pointer;font-weight:900;color:#555;font-size:13px}
 <div class="opt" data-t="420"><b>7:00</b><small>marathon</small></div>
 </div><div class="dim" style="margin-top:8px">✏️ Or type: <input type="number" id="customTime" min="0.5" max="60" step="0.5" placeholder="minutes"> min &nbsp; 🎯 goal: <input type="number" id="customGoal" min="100" max="100000" step="100" placeholder="2000"> 🍯</div></div>
 <button class="playbtn" id="btnStart">▶ &nbsp;PLAY</button>
-<div class="card"><h3>🐝 HOW IT WORKS</h3><div class="dim">Correct = honey + <b>pick 1 of 2 bees</b> (rarity matters: <b>legendary</b> bees are game-changers). Wrong = streak resets + short lockout. Answer streaks 🔥 boost every payout up to +80%. 🛡️ Guard Bee blocks steals. Most 🍯 at timeout (or first to goal) wins.</div></div>
+<div class="card"><h3>🐝 HOW IT WORKS</h3><div class="dim">Tap <b>FORAGE</b> = honey + <b>pick 1 of 2 bees</b> (rarity matters: <b>legendary</b> bees are game-changers). 🛡️ Guard Bee blocks steals. Most 🍯 at timeout (or first to goal) wins. Question sets plug in later.</div></div>
 </div></div>
 
 <div id="results"><div class="sheet" id="resultSheet"></div></div>
@@ -257,24 +252,6 @@ function botScore(b,p,pers){
   return s+RARW[b.rar];
 }
 
-/* ---------- questions: Quick Math warm-up only. Real sets will load from XtremeGaming. ---------- */
-const PACKS={math:{name:'🔢 MATH',infinite:1}};
-function genMathQ(){
-  const lvl=1+Math.floor(qNo/6);
-  const ops=lvl>=3?['+','−','×','÷']:['+','−','×'];
-  const op=ops[Math.random()*ops.length|0];
-  const M=8+lvl*6;let a,b,ans;
-  if(op==='+'){a=2+(Math.random()*M|0);b=2+(Math.random()*M|0);ans=a+b;}
-  else if(op==='−'){a=10+(Math.random()*M|0);b=2+(Math.random()*Math.min(a,M)|0);ans=a-b;}
-  else if(op==='×'){const m=2+Math.min(12,2+lvl);a=2+(Math.random()*m|0);b=2+(Math.random()*m|0);ans=a*b;}
-  else{b=2+(Math.random()*9|0);ans=2+(Math.random()*9|0);a=b*ans;}
-  const set=new Set([ans]);let g=0;
-  while(set.size<4&&g++<60){const d=ans+[-12,-10,-3,-2,-1,1,2,3,10,12][Math.random()*10|0];if(d>=0)set.add(d);}
-  while(set.size<4)set.add(ans+set.size+1);
-  return {t:`What is ${a} ${op} ${b}?`,ans,opts:[...set].sort(()=>Math.random()-.5)};
-}
-function drawQ(){return genMathQ();}
-
 /* ---------- lobby ---------- */
 const AVATARS=['🐝','🐞','🦋','🐛','🐌','🦗'];
 function selRow(id,cb){$(id).addEventListener('click',e=>{const o=e.target.closest('.opt');if(!o)return;[...$(id).children].forEach(x=>x.classList.remove('sel'));o.classList.add('sel');cb(o);});}
@@ -320,37 +297,28 @@ function togglePause(){
   toast(paused?'⏸ Paused':'▶ Resumed!');
 }
 $('pauseVeil').onclick=togglePause;
-let cur=null;
 function nextQ(){
   if(!gameOn||paused)return;
-  locked=false;qNo++;cur=drawQ();
-  $('qsrc').textContent='🔢 MATH';
-  $('qnum').textContent=`QUESTION ${qNo} · TAP THE CORRECT ANSWER`;
-  $('qtext').textContent=cur.t;$('feed').textContent='';
-  const shapes=['▲','◆','●','■'],cls=['r','b','y','g'];
-  $('answers').innerHTML=cur.opts.map((v,i)=>`<button class="ans ${cls[i]}" data-v="${String(v).replace(/"/g,'&quot;')}"><span class="shape">${shapes[i]}</span>${v}</button>`).join('');
-  [...$('answers').children].forEach(b=>b.onclick=()=>answer(b));
-}
-function gainFor(p){return Math.round(p.per*p.mult*(1+Math.min(p.streak,8)*.1));}
-function answer(btn){
-  if(!gameOn||locked||paused||boardOpen)return;
+  locked=false;
   const p=players[me];
-  const v=btn.dataset.v;
-  if(v==cur.ans){
-    locked=true;btn.classList.add('correct');
-    p.streak++;
-    const gain=gainFor(p);p.honey+=gain;
-    const bonus=Math.min(p.streak,8)*10;
-    $('feed').textContent=bonus>10?`✅ +${gain} 🍯! 🔥 x${p.streak} (+${bonus}%) — pick a bee!`:`✅ +${gain} 🍯! Pick a bee!`;
-    sCorrect();popHoney('+'+gain);checkMarks(p);
-    setTimeout(()=>offerBees(p),450);
-  }else{
-    p.streak=0;btn.classList.add('wrong');
-    $('feed').textContent='❌ Not quite — streak lost!';sWrong();
-    locked=true;setTimeout(()=>{if(gameOn&&!paused)nextQ();},900);
-  }
-  syncHud();
+  const g=p.per*p.mult;
+  $('qnum').textContent=`FORAGE #${qNo+1} · +${g}🍯 EACH TAP`;
+  $('qtext').textContent=`⛏ +${g} 🍯`;
+  $('feed').textContent='';
 }
+function gainFor(p){return p.per*p.mult;}
+function forageTap(){
+  if(!gameOn||locked||paused||boardOpen)return;
+  if($('modal').style.display==='flex')return;
+  const p=players[me];
+  locked=true;
+  const gain=p.per*p.mult;p.honey+=gain;
+  sCorrect();popHoney('+'+gain);checkMarks(p);qNo++;
+  $('feed').textContent=`✅ +${gain} 🍯! Pick a bee!`;
+  syncHud();
+  setTimeout(()=>offerBees(p),450);
+}
+$('btnForage').onclick=forageTap;
 function checkMarks(p){
   [500,1000,2500,5000].forEach(m=>{if(p.honey>=m&&!p.marks[m]){p.marks[m]=1;toast(`🎉 ${p.name} passed ${m}🍯!`);rain('🍯',30);}});
 }
