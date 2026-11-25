@@ -159,17 +159,8 @@ summary{cursor:pointer;font-weight:900;color:#555;font-size:13px}
 <div style="text-align:center"><input type="text" id="nameIn" value="You" maxlength="12" style="width:200px;text-align:center"></div>
 </div>
 <div class="card"><h3>📚 QUESTION SET</h3>
-<select id="packSel" style="width:100%">
-<option value="math">🔢 Quick Math — infinite, gets harder</option>
-<option value="animals">🦁 Animal Trivia — 14 questions</option>
-<option value="trivia">🌍 General Trivia — 14 questions</option>
-<option value="custom">✏️ My Questions — write your own below</option>
-</select>
-<details id="customBox"><summary>✏️ Write / paste custom questions</summary>
-<div class="dim" style="margin:6px 0">One per line, format:<br><b>Question | Correct answer | Wrong 1 | Wrong 2 | Wrong 3</b></div>
-<textarea id="customQs" placeholder="What is 2+2? | 4 | 3 | 5 | 6"></textarea>
-<div style="display:flex;gap:8px;margin-top:8px;flex-wrap:wrap"><button class="ghostbtn" id="btnSample">Fill sample</button><button class="ghostbtn" id="btnSaveQs">💾 Save</button><span class="dim" id="customCount"></span></div>
-</details></div>
+<div class="dim">Sets will live on <b>XtremeGaming</b> — nothing baked in here. For now, warm-up with infinite Quick Math.</div>
+</div>
 <div class="card"><h3>🎮 MODE</h3><div class="optrow" id="modeRow">
 <div class="opt sel" data-mode="solo"><b>Solo vs 3 Bots</b><small>classic practice</small></div>
 <div class="opt" data-mode="2p"><b>2P + 2 bots</b><small>pass &amp; play · keys 1-4</small></div>
@@ -266,48 +257,8 @@ function botScore(b,p,pers){
   return s+RARW[b.rar];
 }
 
-/* ---------- questions ---------- */
-const PACKS={
-math:{name:'🔢 MATH',infinite:1},
-animals:{name:'🦁 ANIMALS',qs:[
-["What is a baby frog called?","Tadpole",["Froglet","Cub","Calf"]],
-["Fastest land animal?","Cheetah",["Lion","Horse","Greyhound"]],
-["How many legs does a spider have?","8",["6","10","4"]],
-["What do giant pandas eat mostly?","Bamboo",["Grass","Fish","Berries"]],
-["Which of these birds cannot fly?","Penguin",["Robin","Hawk","Flamingo"]],
-["A group of wolves is called a…?","Pack",["Herd","Flock","School"]],
-["Largest mammal on Earth?","Blue Whale",["Elephant","Giraffe","Hippo"]],
-["How many wings does a bee have?","4",["2","6","8"]],
-["What color is a polar bear's skin?","Black",["White","Pink","Brown"]],
-["Which animal sleeps hanging upside down?","Bat",["Sloth","Koala","Monkey"]],
-["How many hearts does an octopus have?","3",["1","2","4"]],
-["What is a baby kangaroo called?","Joey",["Cub","Pup","Kit"]],
-["Which fish inflates like a balloon?","Pufferfish",["Goldfish","Salmon","Eel"]],
-["Tallest animal on Earth?","Giraffe",["Elephant","Ostrich","Moose"]]]},
-trivia:{name:'🌍 TRIVIA',qs:[
-["How many days are in a leap year?","366",["365","364","367"]],
-["Which planet is called the Red Planet?","Mars",["Venus","Jupiter","Mercury"]],
-["How many continents are there?","7",["5","6","8"]],
-["How many minutes are in an hour?","60",["100","30","90"]],
-["Which shape has 3 sides?","Triangle",["Square","Circle","Pentagon"]],
-["The sun rises in the…?","East",["West","North","South"]],
-["How many colors are in a rainbow?","7",["6","5","8"]],
-["Largest ocean on Earth?","Pacific",["Atlantic","Indian","Arctic"]],
-["Water boils at how many °C?","100",["90","80","120"]],
-["How many legs does an ant have?","6",["8","10","4"]],
-["Which gas do plants absorb from air?","Carbon dioxide",["Oxygen","Hydrogen","Helium"]],
-["Closest star to Earth?","The Sun",["Polaris","Sirius","Mars"]],
-["How many seconds are in a minute?","60",["100","30","120"]],
-["How many players on a soccer team (on field)?","11",["9","10","12"]]]},
-custom:{name:'✏️ CUSTOM',qs:[]}};
-function parseCustom(text){
-  const out=[];
-  text.split('\n').forEach(line=>{const parts=line.split('|').map(s=>s.trim()).filter(Boolean);
-    if(parts.length>=5)out.push([parts[0],parts[1],[parts[2],parts[3],parts[4]]]);
-    else if(parts.length===4)out.push([parts[0],parts[1],[parts[2],parts[3],'Maybe']]);
-  });
-  return out;
-}
+/* ---------- questions: Quick Math warm-up only. Real sets will load from XtremeGaming. ---------- */
+const PACKS={math:{name:'🔢 MATH',infinite:1}};
 function genMathQ(){
   const lvl=1+Math.floor(qNo/6);
   const ops=lvl>=3?['+','−','×','÷']:['+','−','×'];
@@ -322,13 +273,7 @@ function genMathQ(){
   while(set.size<4)set.add(ans+set.size+1);
   return {t:`What is ${a} ${op} ${b}?`,ans,opts:[...set].sort(()=>Math.random()-.5)};
 }
-function drawQ(){
-  const P=PACKS[packId];
-  if(P.infinite)return genMathQ();
-  if(!deck.length)deck=P.qs.map((_,i)=>i).sort(()=>Math.random()-.5);
-  const [q,a,w]=P.qs[deck.pop()];
-  return {t:q,ans:a,opts:[a,...w].sort(()=>Math.random()-.5)};
-}
+function drawQ(){return genMathQ();}
 
 /* ---------- lobby ---------- */
 const AVATARS=['🐝','🐞','🦋','🐛','🐌','🦗'];
@@ -342,25 +287,13 @@ $('btnBoard').onclick=showBoard;
 $('btnPause').onclick=togglePause;
 $('modalX').onclick=()=>{if(boardOpen){$('modal').style.display='none';boardOpen=false;}};
 $('btnStart').onclick=startGame;
-$('packSel').value=packId;
-$('packSel').onchange=e=>{packId=e.target.value;store.set('pack',packId);$('customBox').open=packId==='custom';};
-$('customBox').open=packId==='custom';
 if(best>0)$('bestLine').textContent=`· 👑 best ${best}🍯`;
-function refreshCustomCount(){const n=parseCustom($('customQs').value).length;$('customCount').textContent=n?`✅ ${n} valid`:'⚠️ 0 valid — need Q | Correct | W1 | W2 | W3 per line';}
-$('customQs').value=store.get('custom','');
-refreshCustomCount();
-$('customQs').addEventListener('input',refreshCustomCount);
-$('btnSample').onclick=()=>{$('customQs').value='What is 2+2? | 4 | 3 | 5 | 6\nLargest planet? | Jupiter | Mars | Earth | Venus\nHow many days in a week? | 7 | 5 | 6 | 8';refreshCustomCount();store.set('custom',$('customQs').value);};
-$('btnSaveQs').onclick=()=>{store.set('custom',$('customQs').value);refreshCustomCount();toast('💾 Custom questions saved!');};
 /* clouds */
 for(let i=0;i<5;i++){const c=document.createElement('div');c.className='cloud';const s=40+Math.random()*70;c.style.cssText=`width:${s*1.9}px;height:${s*.75}px;top:${2+Math.random()*30}%;animation-duration:${50+Math.random()*60}s;animation-delay:-${Math.random()*60}s;opacity:${.5+Math.random()*.4}`;document.body.appendChild(c);}
 
 /* ---------- game flow ---------- */
 function newP(name,avatar,bot,pers){return{name,avatar,isBot:bot,pers:pers||null,honey:0,per:5,mult:1,streak:0,shield:0,bees:[],marks:{},cool:0};}
 function startGame(){
-  if(packId==='custom'){const qs=parseCustom($('customQs').value);store.set('custom',$('customQs').value);
-    if(!qs.length){toast('⚠️ Custom set is empty — add questions first! (see format)');$('customBox').open=true;return;}
-    PACKS.custom.qs=qs;}
   const ct=parseFloat($('customTime').value);timeLeft=timeTotal=(ct>0&&ct<=60)?Math.round(ct*60):timeLeft;
   if(+$('customGoal').value>=50)goal=+$('customGoal').value;
   const counts={solo:{h:1,b:3},'2p':{h:2,b:2},'3p':{h:3,b:1},'4p':{h:4,b:0}}[mode];
@@ -391,7 +324,7 @@ let cur=null;
 function nextQ(){
   if(!gameOn||paused)return;
   locked=false;qNo++;cur=drawQ();
-  $('qsrc').textContent=PACKS[packId].name;
+  $('qsrc').textContent='🔢 MATH';
   $('qnum').textContent=`QUESTION ${qNo} · TAP THE CORRECT ANSWER`;
   $('qtext').textContent=cur.t;$('feed').textContent='';
   const shapes=['▲','◆','●','■'],cls=['r','b','y','g'];
